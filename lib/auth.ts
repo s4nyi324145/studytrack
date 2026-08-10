@@ -15,3 +15,4 @@ export const auth = betterAuth({
 },
 });
 
+//TODO:  Mentsem el a leirast és az osszefoglalast a better authrol (auth-client stb) a geminibol
