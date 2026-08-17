@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { Calendar, Check, GraduationCap, TrendingUp } from 'lucide-react';
-
+import { registerUser } from '@/actions/sessionActions';
+import { signUp } from '@/lib/auth-client';
+import { redirect } from 'next/navigation';
+import {toast} from "@/components/ui/toast";
+import { useState } from 'react';
+import SpinnerWithText from '@/components/shared/SpinnerWithText';
 const appBenefits = [
 	{
 		icon: Calendar,
@@ -18,7 +23,82 @@ const appBenefits = [
 	},
 ];
 
+
+
+
+
+
 export default function RegisterPage() {
+
+
+	const [loading, setLoading] = useState(false);
+
+	const handleSubmit = async  (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		const form = Object.fromEntries(formData.entries());
+		if(!form.firstName || !form.lastName || !form.email || !form.password || !form.passwordConfirmation){
+			toast.add({
+				title: 'Hiba történt a regisztráció során',
+				description: 'Kérlek töltsd ki az összes mezőt.',
+				type: 'error',
+			  });
+			  return;
+		}
+		if(form.password !== form.passwordConfirmation){
+			toast.add({
+				title: 'Hiba történt a regisztráció során',
+				description: 'A jelszavak nem egyeznek.',
+				type: 'error',
+			  });
+			  return;
+		}
+		await signUp.email({
+			  name: form.firstName + ' ' + form.lastName,
+			  email: form.email as string,
+			  password: form.password as string,
+			}, {
+				onSuccess: () => {
+				  toast.add({
+					title: 'Sikeres regisztráció',
+					description: 'Most már bejelentkezhetsz a fiókodba.',
+					type: 'success',
+				  });
+				  setLoading(false);
+				},
+				onRequest: () => {
+				  setLoading(true);
+				  
+				}
+				,
+				onError: (error) => {
+				  toast.add({
+					title: 'Hiba történt a regisztráció során',
+					description: error.error.status === 422 ? 'Az email cím már használatban van.' : error.error.status === 400 ? 'A jelszó túl rövid' : 'Ismeretlen hiba történt. Kérlek próbáld újra később.',
+					type: 'error',
+				  });
+				  setLoading(false);
+				},			
+			});
+
+		
+	}
+
+
+	//TODO: implement password strength meter
+	//TODO: implement buobles in the background of the right side of the page behind the form in the opposite corners
+
+	const passwordStrength = (password: string) => {
+		if (password.length < 6) {
+			return 'Gyenge';
+		} else if (password.length < 10) {
+			return 'Közepes';
+		} else {
+			return 'Erős';
+		}
+	};
+
+
 	return (
 		<div className="flex min-h-screen w-full bg-background">
 			<section className="hidden flex-1 max-w-2xl flex-col justify-between bg-secondary p-10 lg:flex xl:p-16">
@@ -51,7 +131,7 @@ export default function RegisterPage() {
 			</section>
 
 			<main className="flex w-full flex-1 items-center justify-center px-6 py-10 sm:px-10 lg:w-1/2">
-				<div className="w-full bg-secondary p-5 border-border border rounded-md max-w-md">
+				<div className="w-full bg-secondary p-7 border-border border  rounded-md max-w-md">
 					<div className="mb-8 lg:hidden">
 						<div className="flex items-center gap-2">
 							<GraduationCap className="h-6 w-6 text-primary" />
@@ -64,11 +144,11 @@ export default function RegisterPage() {
 						<p className="mt-2 text-sm text-muted-foreground">Kezd el a féléved nyomon követését</p>
 					</div>
 
-					<form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
+					<form className="space-y-5" onSubmit={(event) => handleSubmit(event)}>
 						<div className="grid gap-5 sm:grid-cols-2">
 							<div className="space-y-2">
 								<label htmlFor="first-name" className="text-sm font-medium text-foreground">Keresztnév</label>
-								<input id="first-name" name="firstName" type="text" autoComplete="given-name" required className="h-11 w-full rounded-lg border border-primary bg-background/70 px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-3 focus:ring-primary/20" />
+								<input id="first-name" name="firstName" type="text"  autoComplete="given-name" required className="h-11 w-full rounded-lg border border-primary bg-background/70 px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-3 focus:ring-primary/20" />
 							</div>
 							<div className="space-y-2">
 								<label htmlFor="last-name" className="text-sm font-medium text-foreground">Vezetéknév</label>
@@ -91,7 +171,7 @@ export default function RegisterPage() {
 							<input id="password-confirmation" name="passwordConfirmation" type="password" autoComplete="new-password" required className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-3 focus:ring-primary/20" />
 						</div>
 
-						<button type="submit" className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30">Fiók létrehozása</button>
+						<button type="submit" disabled={loading} className="h-11 w-full disabled:cursor-not-allowed cursor-pointer rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"> {loading ? <SpinnerWithText  message='Fiók létrehozása....'/> : "Fiók létrehozása"} </button>
 					</form>
 
 					<p className="mt-6 text-center text-sm text-muted-foreground">

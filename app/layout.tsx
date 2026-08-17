@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google"
 import "./globals.css";
+import { Toaster } from "@/components/ui/toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,7 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="hu">
       <body className={`${jakarta.variable} ${inter.variable} ${mono.variable}`}>
-        {children}
+        <main>{children}</main>
+        <Toaster/>
       </body>
     </html>
   )
